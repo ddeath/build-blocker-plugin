@@ -56,6 +56,21 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     public static final String BLOCKING_JOBS_KEY = "blockingJobs";
 
     /**
+     * the name of dropdown element in the job's config
+     */
+    public static final String CHECK_TYPE_DROPDOWN = "checkType";
+
+    /**
+     * the option in the job's confing dropdown
+     */
+    public static final String USE_BUILD_BLOCKER_FOR_WHOLE_QUEUE = "useBuildBlockerForWholeQueue";
+
+    /**
+     * the option in the job's confing dropdown
+     */
+    public static final String USE_BUILD_BLOCKER_FOR_EXECUTORS = "useBuildBlockerForExecutors";
+
+    /**
      * flag if build blocker should be used
      */
     private boolean useBuildBlocker;
@@ -64,6 +79,13 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
      * the job names that block the build if running
      */
     private String blockingJobs;
+
+    /**
+     * information if we should check Executors or whole queue
+     * USE_BUILD_BLOCKER_FOR_EXECUTORS
+     * USE_BUILD_BLOCKER_FOR_WHOLE_QUEUE
+     */
+    private String checkType = USE_BUILD_BLOCKER_FOR_WHOLE_QUEUE;
 
     /**
      * Returns true if the build blocker is enabled.
@@ -96,6 +118,23 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
      */
     public void setBlockingJobs(String blockingJobs) {
         this.blockingJobs = blockingJobs;
+    }
+
+    /**
+     * Sets the selected option of checkType flag.
+     * @param checkType sets the selected option of checkType flag
+     */
+    public void setCheckType(String checkType) {
+        this.checkType = checkType;
+    }
+
+    /**
+     * Returns true if the build blocker is enabled for whole build queue.
+     * @return true if the build blocker is enabled for whole build queue
+     */
+    @SuppressWarnings("unused")
+    public boolean useBuildBlockerForWholeQueue() {
+        return this.checkType.equals(USE_BUILD_BLOCKER_FOR_WHOLE_QUEUE);
     }
 
     /**
@@ -141,6 +180,16 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
                 } catch(JSONException e) {
                     buildBlockerProperty.setUseBuildBlocker(false);
                     LOG.log(Level.WARNING, "could not get blocking jobs from " + formData.toString());
+                }
+
+                if(formData.getJSONObject(USE_BUILD_BLOCKER).containsKey(CHECK_TYPE_DROPDOWN)){
+                    String value = formData.getJSONObject(USE_BUILD_BLOCKER).getString(CHECK_TYPE_DROPDOWN);
+
+                    if (value.equals(USE_BUILD_BLOCKER_FOR_EXECUTORS)){
+                        buildBlockerProperty.setCheckType(USE_BUILD_BLOCKER_FOR_EXECUTORS);
+                    }else{
+                        buildBlockerProperty.setCheckType(USE_BUILD_BLOCKER_FOR_WHOLE_QUEUE);
+                    }
                 }
             }
 
