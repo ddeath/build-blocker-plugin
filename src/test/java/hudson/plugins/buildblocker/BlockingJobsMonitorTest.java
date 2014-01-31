@@ -61,7 +61,14 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
         String blockingJobName = "blockingJob";
 
         FreeStyleProject blockingProject = this.createFreeStyleProject(blockingJobName);
+        
+        BuildBlockerProperty property = new BuildBlockerProperty();
+
+        property.setCheckType("useBuildBlockerForExecutors");
+        blockingProject.addProperty(property);
+
         blockingProject.setAssignedLabel(label);
+
 
         Shell shell = new Shell("sleep 1");
         blockingProject.getBuildersList().add(shell);
@@ -73,19 +80,19 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
             TimeUnit.SECONDS.sleep(1);
         }
 
-        BlockingJobsMonitor blockingJobsMonitorUsingNull = new BlockingJobsMonitor(null);
+        BlockingJobsMonitor blockingJobsMonitorUsingNull = new BlockingJobsMonitor(null, false);
         assertNull(blockingJobsMonitorUsingNull.getBlockingJob(null));
 
-        BlockingJobsMonitor blockingJobsMonitorNotMatching = new BlockingJobsMonitor("xxx");
+        BlockingJobsMonitor blockingJobsMonitorNotMatching = new BlockingJobsMonitor("xxx", false);
         assertNull(blockingJobsMonitorNotMatching.getBlockingJob(null));
 
-        BlockingJobsMonitor blockingJobsMonitorUsingFullName = new BlockingJobsMonitor(blockingJobName);
+        BlockingJobsMonitor blockingJobsMonitorUsingFullName = new BlockingJobsMonitor(blockingJobName, false);
         assertEquals(blockingJobName, blockingJobsMonitorUsingFullName.getBlockingJob(null).getDisplayName());
 
-        BlockingJobsMonitor blockingJobsMonitorUsingRegex = new BlockingJobsMonitor("block.*");
+        BlockingJobsMonitor blockingJobsMonitorUsingRegex = new BlockingJobsMonitor("block.*", false);
         assertEquals(blockingJobName, blockingJobsMonitorUsingRegex.getBlockingJob(null).getDisplayName());
 
-        BlockingJobsMonitor blockingJobsMonitorUsingMoreLines = new BlockingJobsMonitor("xxx\nblock.*\nyyy");
+        BlockingJobsMonitor blockingJobsMonitorUsingMoreLines = new BlockingJobsMonitor("xxx\nblock.*\nyyy", false);
         assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.getBlockingJob(null).getDisplayName());
 
         // wait until blocking job stopped

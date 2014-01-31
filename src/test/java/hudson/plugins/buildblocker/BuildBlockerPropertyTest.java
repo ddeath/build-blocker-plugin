@@ -85,6 +85,11 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
         Map<String, Map<String, String>> formDataMap = new HashMap<String, Map<String, String>>();
         Map<String, String> subMap = new HashMap<String, String>();
 
+        String key = "checkType";
+        String value = "useBuildBlockerForWholeQueue";
+
+        subMap.put(key, value);
+
         formDataMap.put("useBuildBlocker", subMap);
         formData.accumulateAll(formDataMap);
 
@@ -92,9 +97,16 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
         assertFalse(property.isUseBuildBlocker());
         assertNull(property.getBlockingJobs());
 
-        // json data in request: "{\"useBuildBlocker\":{\"blockingJobs\":\".*ocki.*\"}}"
-        String key = "blockingJobs";
-        String value = ".*ocki.*";
+        // json data in request: "{\"useBuildBlocker\":{\"blockingJobs\":\".*ocki.*\", \"checkType\":{\"useBuildBlockerForExecutors\"}}}"
+        subMap = new HashMap<String, String>();
+        
+        key = "checkType";
+        value = "useBuildBlockerForExecutors";
+        
+        subMap.put(key, value);
+
+        key = "blockingJobs";
+        value = ".*ocki.*";
 
         subMap.put(key, value);
         formDataMap.put("useBuildBlocker", subMap);
