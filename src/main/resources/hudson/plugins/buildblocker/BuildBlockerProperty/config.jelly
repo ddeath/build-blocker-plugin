@@ -27,12 +27,12 @@
         <f:entry name="checkType" title="Block build if certain jobs are :" field="checkType">
           <select name="checkType">
             <j:if test="${!instance.isUseBuildBlockerForWholeQueue()}">
-              <option value="useBuildBlockerForExecutors" selected="true" >running</option>
-              <option value="useBuildBlockerForWholeQueue">in queue</option>
+              <option value="useBuildBlockerForExecutors" selected="true">building</option>
+              <option value="useBuildBlockerForWholeQueue">in queue or building</option>
             </j:if>
             <j:if test="${instance.isUseBuildBlockerForWholeQueue()}">
-              <option value="useBuildBlockerForExecutors">running</option>
-              <option value="useBuildBlockerForWholeQueue" selected="true">in queue</option>
+              <option value="useBuildBlockerForExecutors">building</option>
+              <option value="useBuildBlockerForWholeQueue" selected="true">in queue or building</option>
             </j:if>
           </select>
         </f:entry>
