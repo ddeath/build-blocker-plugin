@@ -50,10 +50,16 @@ public class BlockingJobsMonitor {
     private List<String> blockingJobs;
 
     /**
+     * flag if we should check whole queue, or just running jobs
+     */
+    private boolean checkWholeQueue = false;
+
+    /**
      * Constructor using the job configuration entry for blocking jobs
      * @param blockingJobs line feed separated list og blocking jobs
+     * @param checkWholeQueue if we should check whole queue or not
      */
-    public BlockingJobsMonitor(String blockingJobs) {
+    public BlockingJobsMonitor(String blockingJobs, boolean checkWholeQueue) {
         if(StringUtils.isNotBlank(blockingJobs)) {
             this.blockingJobs = Arrays.asList(blockingJobs.split("\n"));
         }
@@ -102,17 +108,32 @@ public class BlockingJobsMonitor {
          * already been approved for building
          * (but haven't actually started yet)
          */
-        List<Queue.BuildableItem> buildableItems
-            = Jenkins.getInstance().getQueue().getBuildableItems();
 
-        for (Queue.BuildableItem buildableItem : buildableItems) {
-        	if(item != buildableItem) {
-	            for (String blockingJob : this.blockingJobs) {
-	                if(buildableItem.task.getFullDisplayName().matches(blockingJob)) {
-	                    return buildableItem.task;
-	                }
-	            }
-        	}
+        if(!checkWholeQueue){
+            List<Queue.BuildableItem> buildableItems
+                = Jenkins.getInstance().getQueue().getBuildableItems();
+
+            for (Queue.BuildableItem buildableItem : buildableItems) {
+        	   if(item != buildableItem) {
+	                for (String blockingJob : this.blockingJobs) {
+	                    if(buildableItem.task.getFullDisplayName().matches(blockingJob)) {
+	                        return buildableItem.task;
+	                   }
+	               }
+        	   }
+            }
+        }else{
+            Queue.Item[] allItems = Jenkins.getInstance().getQueue().getItems();
+
+            for (Queue.Item queueItem : allItems) {
+                if(item != queueItem) {
+                    for (String blockingJob : this.blockingJobs) {
+                        if(queueItem.task.getFullDisplayName().matches(blockingJob)) {
+                            return queueItem.task;
+                        }
+                    }
+                }
+            }
         }
 
         return null;
