@@ -26,6 +26,7 @@ package hudson.plugins.buildblocker;
 
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.AbstractProject;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.SlaveComputer;
@@ -59,19 +60,22 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
         }
 
         String blockingJobName = "blockingJob";
+        String queueBlockingJobName = "queueBlockingJob";
+
+        FreeStyleProject blockingProjectInQueue = this.createFreeStyleProject(queueBlockingJobName);
 
         FreeStyleProject blockingProject = this.createFreeStyleProject(blockingJobName);
-        
-        BuildBlockerProperty property = new BuildBlockerProperty();
 
-        property.setCheckType("useBuildBlockerForExecutors");
-        blockingProject.addProperty(property);
+        blockingProjectInQueue.getBuildTriggerUpstreamProjects().add((AbstractProject)blockingProject);
 
         blockingProject.setAssignedLabel(label);
+        blockingProjectInQueue.setAssignedLabel(label);
+        blockingProjectInQueue.setBlockBuildWhenUpstreamBuilding(true);
 
 
-        Shell shell = new Shell("sleep 1");
+        Shell shell = new Shell("sleep 5");
         blockingProject.getBuildersList().add(shell);
+        blockingProjectInQueue.getBuildersList().add(shell);
 
         Future<FreeStyleBuild> future = blockingProject.scheduleBuild2(0);
 
@@ -80,6 +84,9 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
             TimeUnit.SECONDS.sleep(1);
         }
 
+        Future<FreeStyleBuild> futureInQueue = blockingProjectInQueue.scheduleBuild2(0);
+
+        //tests with useBuildBlockerForExecutors checkType
         BlockingJobsMonitor blockingJobsMonitorUsingNull = new BlockingJobsMonitor(null, false);
         assertNull(blockingJobsMonitorUsingNull.getBlockingJob(null));
 
@@ -95,8 +102,37 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
         BlockingJobsMonitor blockingJobsMonitorUsingMoreLines = new BlockingJobsMonitor("xxx\nblock.*\nyyy", false);
         assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.getBlockingJob(null).getDisplayName());
 
+        BlockingJobsMonitor blockingJobsMonitorUsingRegexMatchingQueue = new BlockingJobsMonitor("queue.*", false);
+        assertNull(blockingJobsMonitorUsingRegexMatchingQueue.getBlockingJob(null));
+
+        BlockingJobsMonitor blockingJobsMonitorUsingFullNameMatchingQueue = new BlockingJobsMonitor(queueBlockingJobName, false);
+        assertNull(blockingJobsMonitorUsingFullNameMatchingQueue.getBlockingJob(null));
+
+
+        //tests with useBuildBlockerForWholeQueue checkType
+        BlockingJobsMonitor blockingJobsMonitorUsingNullOnWholeQueue = new BlockingJobsMonitor(null, true);
+        assertNull(blockingJobsMonitorUsingNullOnWholeQueue.getBlockingJob(null));
+
+        BlockingJobsMonitor blockingJobsMonitorNotMatchingOnWholeQueue = new BlockingJobsMonitor("xxx", true);
+        assertNull(blockingJobsMonitorNotMatchingOnWholeQueue.getBlockingJob(null));
+
+        BlockingJobsMonitor blockingJobsMonitorUsingFullNameOnWholeQueue = new BlockingJobsMonitor(blockingJobName, true);
+        assertEquals(blockingJobName, blockingJobsMonitorUsingFullNameOnWholeQueue.getBlockingJob(null).getDisplayName());
+
+        BlockingJobsMonitor blockingJobsMonitorUsingRegexOnWholeQueue = new BlockingJobsMonitor("block.*", true);
+        assertEquals(blockingJobName, blockingJobsMonitorUsingRegexOnWholeQueue.getBlockingJob(null).getDisplayName());
+
+        BlockingJobsMonitor blockingJobsMonitorUsingMoreLinesOnWholeQueue = new BlockingJobsMonitor("xxx\nblock.*\nyyy", true);
+        assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLinesOnWholeQueue.getBlockingJob(null).getDisplayName());
+
+        BlockingJobsMonitor blockingJobsMonitorUsingRegexMatchingQueueOnWholeQueue = new BlockingJobsMonitor("queue.*", true);
+        assertEquals(queueBlockingJobName, blockingJobsMonitorUsingRegexMatchingQueueOnWholeQueue.getBlockingJob(null).getDisplayName());
+
+        BlockingJobsMonitor blockingJobsMonitorUsingFullNameMatchingQueueOnWholeQueue = new BlockingJobsMonitor(queueBlockingJobName, true);
+        assertEquals(queueBlockingJobName, blockingJobsMonitorUsingFullNameMatchingQueueOnWholeQueue.getBlockingJob(null).getDisplayName());
+
         // wait until blocking job stopped
-        while (! future.isDone()) {
+        while (! future.isDone() || ! futureInQueue.isDone()) {
             TimeUnit.SECONDS.sleep(1);
         }
 

@@ -62,7 +62,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         String blockingJobName = "blockingJob";
 
-        Shell shell = new Shell("sleep 1");
+        Shell shell = new Shell("sleep 10");
 
         Future<FreeStyleBuild> future1 = createBlockingProject("xxx", shell, masterLabel);
         Future<FreeStyleBuild> future2 = createBlockingProject(blockingJobName, shell, masterLabel);
@@ -136,6 +136,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         BuildBlockerProperty theProperty = new BuildBlockerProperty();
         theProperty.setBlockingJobs( "SelfExcluding_.*" );
+        theProperty.setCheckType("useBuildBlockerForExecutors");
 
         FreeStyleProject theJob1 = createFreeStyleProject( "SelfExcluding_Job1" );
         theJob1.addProperty( theProperty );

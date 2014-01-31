@@ -64,6 +64,20 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
      * Simple property test
      * @throws Exception
      */
+    public void testCheckType() throws Exception {
+        BuildBlockerProperty property = new BuildBlockerProperty();
+
+        property.setCheckType("useBuildBlockerForWholeQueue");
+        assertTrue(property.useBuildBlockerForWholeQueue());
+
+        property.setCheckType("useBuildBlockerForExecutors");
+        assertFalse(property.useBuildBlockerForWholeQueue());
+    }
+
+    /**
+     * Simple property test
+     * @throws Exception
+     */
     public void testIsApplicable() throws Exception {
         BuildBlockerProperty property = new BuildBlockerProperty();
 
@@ -96,13 +110,14 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
         property = (BuildBlockerProperty) property.getDescriptor().newInstance(staplerRequest, formData);
         assertFalse(property.isUseBuildBlocker());
         assertNull(property.getBlockingJobs());
+        assertTrue(property.useBuildBlockerForWholeQueue());
 
         // json data in request: "{\"useBuildBlocker\":{\"blockingJobs\":\".*ocki.*\", \"checkType\":{\"useBuildBlockerForExecutors\"}}}"
         subMap = new HashMap<String, String>();
         
         key = "checkType";
         value = "useBuildBlockerForExecutors";
-        
+
         subMap.put(key, value);
 
         key = "blockingJobs";
@@ -118,5 +133,6 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
         assertTrue(property.isUseBuildBlocker());
         assertNotNull(property.getBlockingJobs());
         assertEquals(value, property.getBlockingJobs());
+        assertFalse(property.useBuildBlockerForWholeQueue());
     }
 }

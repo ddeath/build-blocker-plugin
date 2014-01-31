@@ -63,6 +63,7 @@ public class BlockingJobsMonitor {
         if(StringUtils.isNotBlank(blockingJobs)) {
             this.blockingJobs = Arrays.asList(blockingJobs.split("\n"));
         }
+        this.checkWholeQueue = checkWholeQueue;
     }
 
     /**
